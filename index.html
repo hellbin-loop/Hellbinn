@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hellbin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+<div id="particles"></div>
+
+<!-- ═══════════════ VERIFY PAGE ═══════════════ -->
+<div id="verify-page">
+  <div class="verify-card">
+    <div class="brand-center">
+      <div class="brand-icon"><img src="/hellbin-icon.webp" alt="Hellbin" style="width:36px;height:36px;object-fit:contain;" /></div>
+      <div class="brand-name">Hellbin</div>
+    </div>
+    <div class="verify-subtitle">Confirm you are not a robot to continue</div>
+
+    <div class="captcha-widget" id="captcha-widget" onclick="doCaptcha(event)">
+      <div class="captcha-left">
+        <div class="captcha-box" id="captcha-box">
+          <div class="spin-ring"></div>
+          <svg class="check-svg" viewBox="0 0 16 16" fill="none">
+            <path class="check-path" d="M3 8l3.5 3.5 6.5-7" stroke="#020008" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="captcha-label" id="captcha-label">I'm not a robot</span>
+      </div>
+      <div class="captcha-right">
+        <div class="captcha-icon-ring"><img src="/hellbin-icon.webp" alt="" style="width:22px;height:22px;object-fit:contain;" /></div>
+        <div class="captcha-logo">NEONBOT</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP PAGE ═══════════════ -->
+<div id="app-page" class="hidden">
+  <main>
+    <div class="page-header">
+      <div class="app-brand">
+        <div class="app-brand-icon"><img src="/hellbin-icon.webp" alt="" style="width:52px;height:52px;object-fit:contain;" /></div>
+        <div class="app-brand-name">Hellbin</div>
+      </div>
+      <div class="header-right">
+        <button class="btn-new" onclick="openNewModal()">
+          <span>+</span> New Paste
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-chip"><strong id="stat-total">0</strong>total pastes</div>
+      <div class="stat-chip"><strong id="stat-views">0</strong>total views</div>
+    </div>
+
+    <div class="pastes-grid" id="pastes-grid">
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon">◈</div>
+        <div class="empty-title">NO PASTES YET</div>
+        <div class="empty-sub">Create your first paste to get started</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════ NEW PASTE MODAL ═══════════════ -->
+<div id="new-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">NEW PASTE</span>
+      <button class="modal-close" onclick="closeNewModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input class="form-input" id="new-title" type="text" placeholder="my-script.js" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Expires In</label>
+        <select class="form-select" id="new-expires">
+          <option value="never">never</option>
+          <option value="1h">1 hour</option>
+          <option value="24h">24 hours</option>
+          <option value="7d">7 days</option>
+          <option value="30d">30 days</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Content</label>
+        <textarea class="form-textarea" id="new-content" placeholder="type or paste your text here..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeNewModal()">Cancel</button>
+      <button class="btn-submit" onclick="submitPaste()">CREATE PASTE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ VIEW PASTE MODAL ═══════════════ -->
+<div id="view-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="view-title">—</span>
+      <button class="modal-close" onclick="closeViewModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="view-meta" id="view-meta"></div>
+      <div class="view-code" id="view-code"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="delete-btn" id="delete-btn" onclick="deleteCurrent()">Delete</button>
+      <button class="copy-btn" id="copy-btn" onclick="copyContent()">Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FIXED AUTH PANEL ═══════════════ -->
+<div id="auth-panel" class="auth-panel-fixed hidden">
+  <div id="auth-guest" class="auth-guest">
+    <button class="auth-btn auth-btn-ghost" onclick="openAuthModal('login')">Log in</button>
+    <button class="auth-btn auth-btn-solid" onclick="openAuthModal('register')">Register</button>
+  </div>
+  <div id="auth-user" class="auth-user hidden">
+    <span class="auth-username" id="auth-username"></span>
+    <button class="auth-btn auth-btn-ghost" onclick="doLogout()">Log out</button>
+  </div>
+</div>
+
+<!-- ═══════════════ AUTH MODAL ═══════════════ -->
+<div id="auth-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title" id="auth-modal-title">LOG IN</span>
+      <button class="modal-close" onclick="closeAuthModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="auth-error" class="auth-error hidden"></div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" id="auth-username-input" type="text" placeholder="your username" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="auth-password-input" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+    </div>
+    <div class="modal-footer" style="flex-direction:column;gap:12px;align-items:stretch">
+      <button class="btn-submit" id="auth-submit-btn" onclick="submitAuth()">LOG IN</button>
+      <div class="auth-switch">
+        <span id="auth-switch-text">Don't have an account?</span>
+        <button class="auth-switch-btn" id="auth-switch-btn" onclick="toggleAuthMode()">Register</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>
